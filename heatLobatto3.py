@@ -6,7 +6,7 @@ Created on Wed May 26 16:44:16 2021
 """
 from fenics import * 
 
-from irksome import GaussLegendre, RadauIIA, Dt, TimeStepper, LobattoIIIC
+from irksome import GaussLegendre, RadauIIA, Dt, LobattoIIIC
 
 from ufl.log import error
   
