@@ -20,7 +20,7 @@ import numpy as np
 
 T = 2.0            # final time
 t = 0              # current time
-num_steps = 20     # number of time steps
+num_steps = 40     # number of time steps
 dt = T / num_steps # time step size
 alpha = 3          # parameter alpha
 beta = 1.2         # parameter beta
@@ -46,16 +46,19 @@ Vbig = FunctionSpace(V.mesh(), E)
 du_Ddt = ns * [None]
 bc = []
 for i in range(ns):
-    du_Ddt[i] = Expression('beta', degree=2, alpha=alpha, beta=beta, t=0)
+    du_Ddt[i] = Expression('2*beta*t', degree=2, alpha=alpha, beta=beta, t=0)
     du_Ddt[i].t = t + bt.c[i] * dt
     bc.append(DirichletBC(Vbig.sub(i), du_Ddt[i], boundary))
 
 # Define initial condition
-u_D = Expression('1 + x[0]*x[0] + alpha*x[1]*x[1] + beta*t', degree=2, alpha=alpha, beta=beta, t=0)
+u_D = Expression('1 + x[0]*x[0] + alpha*x[1]*x[1] + beta*t*t', degree=2, alpha=alpha, beta=beta, t=0)
 u_ini = interpolate(u_D, V)
 
-# Define problems rhs. Important: is f is time dependent, we need the same procedure like for the boundary conditions! 
-f = Expression('beta - 2 - 2*alpha', degree=2, alpha=alpha, beta=beta, t=0)
+# Define problems rhs. Important: If f is time dependent, we need the same procedure like for the boundary conditions.
+f = ns * [None]
+for i in range(ns):
+    f[i] = Expression('2*beta*t - 2 - 2*alpha', degree=2, alpha=alpha, beta=beta, t=0)
+    f[i].t = t + bt.c[i] * dt
 
 k0, k1 = TrialFunctions(Vbig)
 v0, v1 = TestFunctions(Vbig)
@@ -65,7 +68,7 @@ u0 = u_ini + A[0][0] * dt * k0 + A[0][1] * dt * k1
 u1 = u_ini + A[1][0] * dt * k0 + A[1][1] * dt * k1
 
 # Assemble weak form. Todo: Should be generalized via for-loop
-F = (inner(k0 , v0) * dx + inner(grad(u0), grad(v0)) * dx) + (inner(k1, v1) * dx + inner(grad(u1), grad(v1)) * dx) - f * v1 * dx - f * v0 * dx
+F = (inner(k0 , v0) * dx + inner(grad(u0), grad(v0)) * dx) + (inner(k1, v1) * dx + inner(grad(u1), grad(v1)) * dx) - f[1] * v1 * dx - f[0] * v0 * dx
 a, L = lhs(F), rhs(F)
 
 vtkfile = File("heat_gaussian/solution.pvd")    
@@ -78,10 +81,11 @@ arrayX = []
 
 for n in range(num_steps):
 
-    # Update BCs wrt current time.
+    # Update BCs and rhs wrt current time.
     for i in range(ns):
         du_Ddt[i].t = t + bt.c[i] * dt
-    
+        f[i].t = t + bt.c[i] * dt
+
     # Compute solution for stages
     solve(a == L, k, bc)   
     # Assemble solution from stages
