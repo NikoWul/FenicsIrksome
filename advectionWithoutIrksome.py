@@ -7,7 +7,7 @@ Created on Fri Jun  4 09:11:12 2021
 
 from fenics import * 
 
-from irksome import GaussLegendre, RadauIIA, Dt, TimeStepper
+from irksome import GaussLegendre, RadauIIA
 
 
   
@@ -50,7 +50,8 @@ F = u*v*dx + u_n*v*dx - dt*c*Dx(u,0)*v*dx
 
 a, L = lhs(F), rhs(F)
 
-
+print(a)
+print(L)
 
 u = Function(V)
 t = 0
@@ -64,10 +65,18 @@ for n in range(num_steps):
 
     # Compute solution
     solve(a == L, u, bc)
+    u_ref = interpolate(u_D, V)
+    error_normalized = (u_ref - u) / u_ref
+    # project onto function space
+    error_pointwise = project(abs(error_normalized), V)
+    # determine L2 norm to estimate total error
+    error_total = sqrt(assemble(inner(error_pointwise, error_pointwise) * dx))
+    error_pointwise.rename("error", " ")
+    print('t = %.2f: error = %.3g' % (t, error_total))
     
     arrayY.append(u.vector().get_local().max())
     arrayX.append(t)
-    print(u.vector().get_local())
+    #print(u.vector().get_local())
     # Update previous solution
     u_n.assign(u)
     #for vec in vertices(msh):

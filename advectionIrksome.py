@@ -38,6 +38,7 @@ def boundary(x, on_boundary):
         
 bc = DirichletBC(V, u_D, boundary)
 F, bcs = getForm(F_n, bt, V, dt, bc)
+print(F)
 
 # Residual
 r = u - u_n + dt * c * Dx((u+u_n)/2,0)
@@ -46,6 +47,7 @@ h = 0.1  # should be interval size. Don't know how to extract this from msh righ
 tau = h/(2.0*c) # tau from SUPG fenics example
 F += tau * c * Dx(v,0) * r * dx
 a, L = lhs(F), rhs(F)  
+
 
 u = Function(V)
 t = 0
@@ -62,10 +64,17 @@ for n in range(num_steps):
 
     # Plot solution
     #plot(u)
-
+    u_ref = interpolate(u_D, V)
+    error_normalized = (u_ref - u) / u_ref
+    # project onto function space
+    error_pointwise = project(abs(error_normalized), V)
+    # determine L2 norm to estimate total error
+    error_total = sqrt(assemble(inner(error_pointwise, error_pointwise) * dx))
+    error_pointwise.rename("error", " ")
+    print('t = %.2f: error = %.3g' % (t, error_total))
     # Compute error at vertices
-    u_e = interpolate(u_D, V)
-    print(u.vector().get_local())
+    #u_e = interpolate(u_D, V)
+    #print(u.vector().get_local())
     arrayY.append(u.vector().get_local().max())
     arrayX.append(t)
 

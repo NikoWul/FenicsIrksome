@@ -70,11 +70,13 @@ u1 = u_ini + A[1][0] * dt * k0 + A[1][1] * dt * k1
 # Assemble weak form. Todo: Should be generalized via for-loop
 F = (inner(k0 , v0) * dx + inner(grad(u0), grad(v0)) * dx) + (inner(k1, v1) * dx + inner(grad(u1), grad(v1)) * dx) - f[1] * v1 * dx - f[0] * v0 * dx
 a, L = lhs(F), rhs(F)
+print(F)
 
 vtkfile = File("heat_gaussian/solution.pvd")    
 
 # Unknown: stages k
 k = Function(Vbig)
+
 
 arrayY = []
 arrayX = []

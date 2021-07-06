@@ -48,10 +48,9 @@ def replace(e, mapping):
     return map_integrand_dags(MyReplacer(mapping2), e)
 
 
-def getForm(F, butch, V, dt, bc):
+def getForm(F, butch, V, dt, bc, f):
     """Given a time-dependent variational form and a
     :class:`ButcherTableau`, produce UFL for the s-stage RK method.
-
     :arg F: UFL form for the semidiscrete ODE/DAE
     :arg butch: the :class:`ButcherTableau` for the RK method being used to
          advance in time.
@@ -60,7 +59,6 @@ def getForm(F, butch, V, dt, bc):
     :arg bc:  a :class:`DirichletBC` object
          containing (possible time-dependent) boundary conditions imposed
          on the system.
-
     On output, we return a tuple consisting of four parts:
        - Fnew, the :class:`Form`
        - `bcnew`, a list of :class:`firedrake.DirichletBC` objects to be posed
@@ -69,16 +67,18 @@ def getForm(F, butch, V, dt, bc):
 
     # extract parameters from the butcher tableau butch
     A = butch.A
-    stages = butch.num_stages
+    num_stages = butch.num_stages
+    c=butch.c
 
     # create expanded Function Space
     E = V.ufl_element()
-    for i in range(stages-1):
+    for i in range(num_stages-1):
         E = E*V.ufl_element()
     Vbig = FunctionSpace(V.mesh(), E)
+    t=0
 
     # create Testfunctions and Trialfunctions from function space V, create functions k_i from expanded Functionspace
-    vnew = TestFunction(V)
+    vnew = TestFunction(Vbig)
     k = Function(Vbig)
     v = TestFunction(V)
     u = TrialFunction(V)
@@ -88,32 +88,31 @@ def getForm(F, butch, V, dt, bc):
     kbits = split(k)
 
     # make objects Ak
-    kbits_np = numpy.zeros((stages, stages), dtype="object")
-    for i in range(stages):
-        for j in range(stages):
+    kbits_np = numpy.zeros((num_stages, num_stages), dtype="object")
+    for i in range(num_stages):
+        for j in range(num_stages):
             kbits_np[i, j] = kbits[i]
     Ak = A @ kbits_np
 
     # transformation to Runge-Kutta variational form
     Fnew = Zero()
-    for i in range(stages):
-        repl = {dt: dt + dt}
+    for i in range(num_stages):
+        repl = {t: t + c[i] * dt}
         for j, (ubit, vbit, kbit) in enumerate(zip(u0bits, vbits, kbits)):
             repl[ubit] = ubit + dt * Ak[i, j]
-            repl[vbit] = vbigbits[0]
-            repl[TimeDerivative(ubit)] = kbits[i]
+            repl[vbit] = vbigbits[ i + j]
+            repl[TimeDerivative(ubit)] = kbits_np[i, j]
             if (len(ubit.ufl_shape) == 1):
-                print('this loop too')
                 for kk, kbitbit in enumerate(kbits_np[i, j]):
                     repl[TimeDerivative(ubit[kk])] = kbitbit
                     repl[ubit[kk]] = repl[ubit][kk]
                     repl[vbit[kk]] = repl[vbit][kk]
-
         Fnew += replace(F, repl)
 
     # create list of boundary conditions
+    #Fnew=Fnew- f[1] * vbigbits[1] * dx - f[0] * vbigbits[0] * dx
     bcnew = []
-    for i in range(stages):
+    for i in range(num_stages):
         bcnew.append(bc)
 
-    return Fnew, bcnew
+    return Fnew, bcnew, vbigbits
