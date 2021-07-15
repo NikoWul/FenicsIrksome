@@ -16,15 +16,6 @@ This code can be used to perform convergence studies with konvergenzHeat.py.
 
 If you clone this repository, you can directly perform the experiments  with the respective parameters:
 
-* maximum simulation time **T** = 2.0
-* largest timestep size **tau_0** = 1/4
-* considered timestep sizes **tau_i** =r [1/4, 1/8, 1/16, ..., 1/1024]
-* fine mesh resolution **h/4** = 0.05
-
-## Parameter set with lower runtime
-
-For a lower runtime, you can also use a modified parameter set:
-
 * maximum simulation time **T** = 1/32
 * largest timestep **tau_0** = 1/128
 * considered timestep sizes **tau_i** = [1/128, 1/256, 1/512, 1/1024, 1/2048]
