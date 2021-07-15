@@ -5,5 +5,4 @@ from .ButcherTableaux import BackwardEuler    # noqa: F401
 from .ButcherTableaux import RadauIIA         # noqa: F401
 from .ButcherTableaux import PareschiRusso    # noqa: F401
 from .ButcherTableaux import QinZhang         # noqa: F401
-from .getForm import getForm                  # noqa: F401
-from .deriv import Dt                         # noqa: F401
+

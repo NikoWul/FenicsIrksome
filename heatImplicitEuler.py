@@ -1,20 +1,16 @@
 """
-FEniCS tutorial demo program: Heat equation with Dirichlet conditions.
-Test problem is chosen to give an exact solution at all nodes of the mesh.
-  u'= Laplace(u) + f  in the unit square
-  u = u_D             on the boundary
-  u = u_0             at t = 0
-  u = 1 + x^2 + alpha*y^2 + \beta*t
-  f = beta - 2 - 2*alpha
+Literature:
+[1] Hans Petter Langtangen, Anders Logg. "Solving PDEs in Python– The FEniCS Tutorial Volume I." Springer(2017).
 """
 
 from __future__ import print_function
 from fenics import *
 import numpy as np
 
+# Define time, timesteps and parameters
 T = 2.0            # final time
 num_steps = 20     # number of time steps
-dt = T / num_steps # time step size
+dt = T / num_steps  # time step size
 alpha = 3          # parameter alpha
 beta = 1.2         # parameter beta
 
@@ -27,14 +23,15 @@ V = FunctionSpace(mesh, 'P', 1)
 u_D = Expression('1 + x[0]*x[0] + alpha*x[1]*x[1] + beta*t',
                  degree=2, alpha=alpha, beta=beta, t=0)
 
+
 def boundary(x, on_boundary):
     return on_boundary
+
 
 bc = DirichletBC(V, u_D, boundary)
 
 # Define initial value
 u_n = interpolate(u_D, V)
-#u_n = project(u_D, V)
 
 # Define variational problem
 u = TrialFunction(V)
