@@ -44,4 +44,4 @@ Heat equation with a seventh order RHS solved with the second order Gauss-Legend
 
 If you want to refer to this code, please use the following reference:
 
-[1] Wullenweber, N., Rodenberg, B., Mehl, M., & Bungartz, H.-J. (2021). High-order time stepping schemes for solving partial differential equations with FEniCS.
+[1] Wullenweber, N. (2021). High-order time stepping schemes for solving partial differential equations with FEniCS. [url](https://mediatum.ub.tum.de/604993?query=wullenweber&show_id=1621360&srcnodeid=604993)
